@@ -94,13 +94,13 @@ class salesManager:
 
     # -------------------------------------------------------
     def show(self):
-        del self.blll_list[:]
+        del self.bill_list[:]
         self.Sales_List.delete(0, END)
 
         for i in os.listdir(BILL_DIR):
             if i.split('.')[-1] == 'txt':
                 self.Sales_List.insert(END, i)
-                self.blll_list.append(i.split('.')[0])
+                self.bill_list.append(i.split('.')[0])
 
     def get_data(self, ev):
         index_ = self.Sales_List.curselection()
