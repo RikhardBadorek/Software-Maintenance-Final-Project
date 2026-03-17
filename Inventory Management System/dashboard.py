@@ -7,7 +7,7 @@ import os
 
 from employee import employeeClass
 from supplier import supplierClass
-from category import categoryClass
+from category import categoryManager
 from product import productClass
 from sales import salesClass
 
@@ -181,7 +181,7 @@ class IMS:
 
     def category(self):
         self.new_win = Toplevel(self.root)
-        self.new_obj = categoryClass(self.new_win)
+        self.new_obj = categoryManager(self.new_win)
 
     def product(self):
         self.new_win = Toplevel(self.root)
