@@ -5,7 +5,6 @@ import sqlite3
 import os
 
 # Set base path for database
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'ims.db')
 IMAGE_DIR = os.path.join(BASE_DIR, 'images')
@@ -26,8 +25,7 @@ class categoryManager:
         self.setup_ui()
         self.show()
 
-        # Database helper function
-
+     # Database helper function
     def execute_db_query(self, query, params=(), fetchall=False, fetchone=False):
         try:
             with sqlite3.connect(DB_PATH) as con:
@@ -44,31 +42,22 @@ class categoryManager:
         except Exception as ex:
             messagebox.showerror("Error",f"Error due to : {str(ex)}")
             return None
-        
+            
     # UI setup function
-
     def setup_ui(self):
-        
         #--------------- title ---------------------
         lbl_title=Label(self.root,text="Manage Product Category",font=("goudy old style",30),bg="#184a45",fg="white",bd=3,relief=RIDGE).pack(side=TOP,fill=X,padx=10,pady=20)
-        
         lbl_name=Label(self.root,text="Enter Category Name",font=("goudy old style",30),bg="white").place(x=50,y=100)
         txt_name=Entry(self.root,textvariable=self.var_name,bg="lightyellow",font=("goudy old style",18)).place(x=50,y=170,width=300)
-
         btn_add=Button(self.root,text="ADD",command=self.add,font=("goudy old style",15),bg="#4caf50",fg="white",cursor="hand2").place(x=360,y=170,width=150,height=30)
         btn_delete=Button(self.root,text="Delete",command=self.delete,font=("goudy old style",15),bg="red",fg="white",cursor="hand2").place(x=520,y=170,width=150,height=30)
-
         #------------ category details -------------
         cat_frame=Frame(self.root,bd=3,relief=RIDGE)
         cat_frame.place(x=700,y=100,width=380,height=100)
-
         scrolly=Scrollbar(cat_frame,orient=VERTICAL)
         scrollx=Scrollbar(cat_frame,orient=HORIZONTAL)\
-        
         # Refactored the column setup to be more dynamic and maintainable
-
         columns = {"cid": ("C ID", 90), "name": ("Name", 100)}
-        
         self.CategoryTable=ttk.Treeview(cat_frame, columns=tuple(columns.keys()),yscrollcommand=scrolly.set,xscrollcommand=scrollx.set)
         scrollx.pack(side=BOTTOM,fill=X)
         scrolly.pack(side=RIGHT,fill=Y)
@@ -79,13 +68,9 @@ class categoryManager:
         for col_id, (col_text, col_width) in columns.items():
             self.CategoryTable.heading(col_id, text=col_text)
             self.CategoryTable.column(col_id, width=col_width)
-
         self.CategoryTable.pack(fill=BOTH,expand=1)
         self.CategoryTable.bind("<ButtonRelease-1>",self.get_data)
-        
-
-        #----------------- images ---------------------
-        # Use Os path to load files
+        #----------------- images --------------------- # Use Os path to load files
         try:
             self.im1=Image.open(os.path.join(IMAGE_DIR, "cat.jpg"))
             self.im1=self.im1.resize((500,250))
