@@ -156,6 +156,8 @@ class billManager:
         self.var_price=StringVar()
         self.var_qty=StringVar()
         self.var_stock=StringVar()
+        #new
+        self.var_discount=StringVar(value="5")
 
         Add_CartWidgets_Frame=Frame(self.root,bd=2,relief=RIDGE,bg="white")
         Add_CartWidgets_Frame.place(x=420,y=550,width=530,height=110)
@@ -194,8 +196,14 @@ class billManager:
         self.lbl_amnt=Label(billMenuFrame,text="Bill Amount\n[0]",font=("goudy old style",15,"bold"),bg="#3f51b5",fg="white")
         self.lbl_amnt.place(x=2,y=5,width=120,height=70)
 
-        self.lbl_discount=Label(billMenuFrame,text="Discount\n[5%]",font=("goudy old style",15,"bold"),bg="#8bc34a",fg="white")
-        self.lbl_discount.place(x=124,y=5,width=120,height=70)
+        # old: self.lbl_discount=Label(billMenuFrame,text="Discount\n[5%]",font=("goudy old style",15,"bold"),bg="#8bc34a",fg="white")
+        # old: self.lbl_discount.place(x=124,y=5,width=120,height=70)
+        #new
+        lbl_discount_text = Label(billMenuFrame, text="Discount %", font=("goudy old style", 15, "bold"), bg="#8bc34a", fg="white")
+        lbl_discount_text.place(x=124, y=5, width=120, height=35)
+        
+        txt_discount = Entry(billMenuFrame, textvariable=self.var_discount, font=("goudy old style", 15, "bold"), bg="lightyellow", justify=CENTER)
+        txt_discount.place(x=124, y=40, width=120, height=35)
 
         self.lbl_net_pay=Label(billMenuFrame,text="Net Pay\n[0]",font=("goudy old style",15,"bold"),bg="#607d8b",fg="white")
         self.lbl_net_pay.place(x=246,y=5,width=160,height=70)
@@ -316,16 +324,23 @@ class billManager:
         self.bill_update()
 
     def bill_update(self):
-        self.bill_amnt=0
-        self.net_pay=0
-        self.discount=0
+        self.bill_amnt = 0
+        self.net_pay = 0
+        self.discount = 0 
+        
         for row in self.cart_list:
-            self.bill_amnt=self.bill_amnt+(float(row[2])*int(row[3]))
-        self.discount=(self.bill_amnt*5)/100
-        self.net_pay=self.bill_amnt-self.discount
+            self.bill_amnt = self.bill_amnt + (float(row[2]) * int(row[3]))
+        # new
+        try:
+            discount_percentage = float(self.var_discount.get())
+        except ValueError:
+            discount_percentage = 0 # if the cashier leaves the box blank
+            
+        self.discount = (self.bill_amnt * discount_percentage) / 100
+        self.net_pay = self.bill_amnt - self.discount        
         self.lbl_amnt.config(text=f"Bill Amnt\n{str(self.bill_amnt)}")
         self.lbl_net_pay.config(text=f"Net Pay\n{str(self.net_pay)}")
-        self.cartTitle.config(text=f"Cart \t Total Products: [{str(len(self.cart_list))}]")
+        self.cartTitle.config(text=f"Cart \t Total Products:[{str(len(self.cart_list))}]")
 
     def show_cart(self):
         try:
@@ -343,6 +358,8 @@ class billManager:
             messagebox.showerror("Error", f"Please Add product to the Cart!!!", parent=self.root)
             return
 
+        #new
+        self.bill_update()
         self.bill_top()
         self.bill_middle()
         self.bill_bottom()
