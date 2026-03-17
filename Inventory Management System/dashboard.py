@@ -5,11 +5,11 @@ import time
 import sqlite3
 import os
 
-from employee import employeeClass
-from supplier import supplierClass
+from employee import employeeManager
+from supplier import supplierManager
 from category import categoryManager
-from product import productClass
-from sales import salesClass
+from product import productManager
+from sales import salesManager
 
 # ------------------ BASE PATH SETUP ------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -173,11 +173,11 @@ class IMS:
     # -------------- functions ----------------
     def employee(self):
         self.new_win = Toplevel(self.root)
-        self.new_obj = employeeClass(self.new_win)
+        self.new_obj = employeeManager(self.new_win)
 
     def supplier(self):
         self.new_win = Toplevel(self.root)
-        self.new_obj = supplierClass(self.new_win)
+        self.new_obj = supplierManager(self.new_win)
 
     def category(self):
         self.new_win = Toplevel(self.root)
@@ -185,11 +185,11 @@ class IMS:
 
     def product(self):
         self.new_win = Toplevel(self.root)
-        self.new_obj = productClass(self.new_win)
+        self.new_obj = productManager(self.new_win)
 
     def sales(self):
         self.new_win = Toplevel(self.root)
-        self.new_obj = salesClass(self.new_win)
+        self.new_obj = salesManager(self.new_win)
 
     def update_content(self):
         con = sqlite3.connect(database=os.path.join(BASE_DIR, 'ims.db'))

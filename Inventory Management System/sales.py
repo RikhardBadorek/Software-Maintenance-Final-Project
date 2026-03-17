@@ -12,7 +12,7 @@ BILL_DIR = os.path.join(BASE_DIR, "bill")
 os.makedirs(BILL_DIR, exist_ok=True)
 # ---------------------------------------------------
 
-class salesClass:
+class salesManager:
     def __init__(self, root):
         self.root = root
         self.root.geometry("1100x500+320+220")
@@ -136,5 +136,5 @@ class salesClass:
 
 if __name__ == "__main__":
     root = Tk()
-    obj = salesClass(root)
+    obj = salesManager(root)
     root.mainloop()
