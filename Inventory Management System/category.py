@@ -102,34 +102,27 @@ class categoryManager:
             messagebox.showerror("Error",f"Error loading images: {str(ex)}")
 #----------------------------------------------------------------------------------
     def add(self):
-        try:
-            if self.var_name.get()=="":
-                messagebox.showerror("Error","Category Name must be required",parent=self.root)
-                return
-            
-            row = self.execute_db_query("Select * from category where name=?",(self.var_name.get(),),fetchone=True)
-            if row is not None:
-                messagebox.showerror("Error","Category already present",parent=self.root)
-                return
-            
-            success = self.execute_db_query("insert into category (name) values (?)",(self.var_name.get(),))
-            if success:
-                messagebox.showinfo("Success","Category added successfully",parent=self.root)
-                self.clear()
-        except Exception as ex:
-            messagebox.showerror("Error",f"Error due to : {str(ex)}")
+        if self.var_name.get()=="":
+            messagebox.showerror("Error","Category Name must be required",parent=self.root)
+            return
+        
+        row = self.execute_db_query("Select * from category where name=?",(self.var_name.get(),),fetchone=True)
+        if row is not None:
+            messagebox.showerror("Error","Category already present",parent=self.root)
+            return
+        
+        success = self.execute_db_query("insert into category (name) values (?)",(self.var_name.get(),))
+        if success:
+            messagebox.showinfo("Success","Category added successfully",parent=self.root)
+            self.clear()
 
     def show(self):
-        try:
-            rows = self.execute_db_query("select * from category", fetchall=True)
-            if rows is not None:
-                self.CategoryTable.delete(*self.CategoryTable.get_children())
-                for row in rows:
-                    self.CategoryTable.insert('',END,values=row)
-        except Exception as ex:
-            messagebox.showerror("Error",f"Error due to : {str(ex)}")
-
-    
+        rows = self.execute_db_query("select * from category", fetchall=True)
+        if rows is not None:
+            self.CategoryTable.delete(*self.CategoryTable.get_children())
+            for row in rows:
+                self.CategoryTable.insert('',END,values=row)
+        
     def clear(self):
         self.var_name.set("")
         self.var_cat_id.set("")
@@ -144,25 +137,21 @@ class categoryManager:
             self.var_name.set(row[1])
     
     def delete(self):
-        try:
-            if self.var_cat_id.get()=="":
-                messagebox.showerror("Error","Category name must be required",parent=self.root)
-                return
-            
-            row = self.execute_db_query("Select * from category where cid=?",(self.var_cat_id.get(),),fetchone=True)
-            if row is None:
-                messagebox.showerror("Error","Invalid Category Name",parent=self.root)
-                return
-            
-            op = messagebox.askyesno("Confirm","Do you really want to delete?",parent=self.root)
-            if op:
-                success = self.execute_db_query("delete from category where cid=?",(self.var_cat_id.get(),))
-                if success:
-                    messagebox.showinfo("Delete","Category Deleted Successfully",parent=self.root)
-                    self.clear()
-            
-        except Exception as ex:
-            messagebox.showerror("Error",f"Error due to : {str(ex)}")
+        if self.var_cat_id.get()=="":
+            messagebox.showerror("Error","Category name must be required",parent=self.root)
+            return
+        
+        row = self.execute_db_query("Select * from category where cid=?",(self.var_cat_id.get(),),fetchone=True)
+        if row is None:
+            messagebox.showerror("Error","Invalid Category Name",parent=self.root)
+            return
+        
+        op = messagebox.askyesno("Confirm","Do you really want to delete?",parent=self.root)
+        if op:
+            success = self.execute_db_query("delete from category where cid=?",(self.var_cat_id.get(),))
+            if success:
+                messagebox.showinfo("Delete","Category Deleted Successfully",parent=self.root)
+                self.clear()
 
 if __name__=="__main__":
     root=Tk()
