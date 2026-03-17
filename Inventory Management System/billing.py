@@ -6,7 +6,12 @@ import time
 import os
 import tempfile
 
-class billClass:
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+IMAGE_DIR = os.path.join(BASE_DIR, "images")
+BILL_DIR = os.path.join(BASE_DIR, "bill")
+DB_PATH = os.path.join(BASE_DIR, 'ims.db')
+
+class billManager:
     def __init__(self,root):
         self.root=root
         self.root.geometry("1350x700+110+80")
@@ -220,34 +225,39 @@ class billClass:
         self.var_cal_input.set(eval(result))
 
     def show(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
         try:
-            cur.execute("select pid,name,price,qty,status from product where status='Active'")
-            rows=cur.fetchall()
-            self.product_Table.delete(*self.product_Table.get_children())
-            for row in rows:
-                self.product_Table.insert('',END,values=row)
+            with sqlite3.connect(DB_PATH) as con:
+                cur = con.cursor()
+                cur.execute("select pid,name,price,qty,status from product where status='Active'")
+                rows = cur.fetchall()
+                self.product_Table.delete(*self.product_Table.get_children())
+                for row in rows:
+                    self.product_Table.insert('', END, values=row)
         except Exception as ex:
-            messagebox.showerror("Error",f"Error due to : {str(ex)}")
+            messagebox.showerror("Error", f"Error due to : {str(ex)}")
 
     def search(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        if self.var_search.get() == "":
+            messagebox.showerror("Error", "Search input should be required", parent=self.root)
+            return
+
         try:
-            if self.var_search.get()=="":
-                messagebox.showerror("Error","Search input should be required",parent=self.root)
-            else:
-                cur.execute("select pid,name,price,qty,status from product where name LIKE '%"+self.var_search.get()+"%'")
-                rows=cur.fetchall()
-                if len(rows)!=0:
+            with sqlite3.connect(DB_PATH) as con:
+                cur = con.cursor()
+
+                # Make parameterized query instead of string formatting for better security
+
+                cur.execute("select pid,name,price,qty,status from product where name LIKE ?", ('%' + self.var_search.get() + '%',))
+                rows = cur.fetchall()
+                
+                if len(rows) != 0:
                     self.product_Table.delete(*self.product_Table.get_children())
                     for row in rows:
-                        self.product_Table.insert('',END,values=row)
+                        self.product_Table.insert('', END, values=row)
                 else:
-                    messagebox.showerror("Error","No record found!!!",parent=self.root)
+                    messagebox.showerror("Error", "No record found!!!", parent=self.root)
         except Exception as ex:
-            messagebox.showerror("Error",f"Error due to : {str(ex)}")
+            messagebox.showerror("Error", f"Error due to : {str(ex)}")
 
     def get_data(self,ev):
         f=self.product_Table.focus()
@@ -272,42 +282,43 @@ class billClass:
         self.var_stock.set(row[4])
         
     def add_update_cart(self):
-        if self.var_pid.get()=="":
-            messagebox.showerror("Error","Please select product from the list",parent=self.root)
-        elif self.var_qty.get()=="":
-            messagebox.showerror("Error","Quantity is required",parent=self.root)
-        elif int(self.var_qty.get())>int(self.var_stock.get()):
-            messagebox.showerror("Error","Invalid Quantity",parent=self.root)
+        if self.var_pid.get() == "":
+            messagebox.showerror("Error", "Please select product from the list", parent=self.root)
+            return
+        if self.var_qty.get() == "":
+            messagebox.showerror("Error", "Quantity is required", parent=self.root)
+            return
+        if int(self.var_qty.get()) > int(self.var_stock.get()):
+            messagebox.showerror("Error", "Invalid Quantity", parent=self.root)
+            return
+            
+        price_cal = self.var_price.get()
+        cart_data =[self.var_pid.get(), self.var_pname.get(), price_cal, self.var_qty.get(), self.var_stock.get()]
+        present = "no"
+        index_ = 0
+        for row in self.cart_list:
+            if self.var_pid.get() == str(row[0]):
+                present = "yes"
+                break
+            index_ += 1
+            
+        if present == "yes":
+            op = messagebox.askyesno("Confirm", "Product already present\nDo you want to Update|Remove from the Cart List", parent=self.root)
+            if op:
+                if self.var_qty.get() == "0":
+                    self.cart_list.pop(index_)
+                else:
+                    self.cart_list[index_][3] = self.var_qty.get()
         else:
-            #price_cal=int(self.var_qty.get())*float(self.var_price.get())
-            #price_cal=float(price_cal)
-            price_cal=self.var_price.get()
-            cart_data=[self.var_pid.get(),self.var_pname.get(),price_cal,self.var_qty.get(),self.var_stock.get()]
-            #---------- update cart --------------
-            present="no"
-            index_=0
-            for row in self.cart_list:
-                if self.var_pid.get()==row[0]:
-                    present="yes"
-                    break
-                index_+=1
-            if present=="yes":
-                op=messagebox.askyesno("Confirm","Product already present\nDo you want to Update|Remove from the Cart List",parent=self.root)
-                if op==True:
-                    if self.var_qty.get()=="0":
-                        self.cart_list.pop(index_)
-                    else:
-                        #self.cart_list[index_][2]=price_cal
-                        self.cart_list[index_][3]=self.var_qty.get()
-            else:
-                self.cart_list.append(cart_data)
-            self.show_cart()
-            self.bill_update()
+            self.cart_list.append(cart_data)
+            
+        self.show_cart()
+        self.bill_update()
 
     def bill_update(self):
         self.bill_amnt=0
         self.net_pay=0
-        self.siscount=0
+        self.discount=0
         for row in self.cart_list:
             self.bill_amnt=self.bill_amnt+(float(row[2])*int(row[3]))
         self.discount=(self.bill_amnt*5)/100
@@ -325,23 +336,24 @@ class billClass:
             messagebox.showerror("Error",f"Error due to : {str(ex)}")
 
     def generate_bill(self):
-        if self.var_cname.get()=="" or self.var_contact.get()=="":
-            messagebox.showerror("Error",f"Customer Details are required",parent=self.root)
-        elif len(self.cart_list)==0:
-            messagebox.showerror("Error",f"Please Add product to the Cart!!!",parent=self.root)
-        else:
-            #--------- bill top -----------------
-            self.bill_top()
-            #--------- bill middle --------------
-            self.bill_middle()
-            #--------- bill bottom --------------
-            self.bill_bottom()
+        if self.var_cname.get() == "" or self.var_contact.get() == "":
+            messagebox.showerror("Error", f"Customer Details are required", parent=self.root)
+            return
+        if len(self.cart_list) == 0:
+            messagebox.showerror("Error", f"Please Add product to the Cart!!!", parent=self.root)
+            return
 
-            fp=open(f'bill/{str(self.invoice)}.txt','w')
-            fp.write(self.txt_bill_area.get('1.0',END))
-            fp.close()
-            messagebox.showinfo("Saved","Bill has been generated",parent=self.root)
-            self.chk_print=1
+        self.bill_top()
+        self.bill_middle()
+        self.bill_bottom()
+
+        # Fixed file path saving using os.path.join
+        bill_path = os.path.join(BILL_DIR, f"{str(self.invoice)}.txt")
+        with open(bill_path, 'w') as fp:
+            fp.write(self.txt_bill_area.get('1.0', END))
+            
+        messagebox.showinfo("Saved", "Bill has been generated", parent=self.root)
+        self.chk_print = 1
 
     def bill_top(self):
         self.invoice=int(time.strftime("%H%M%S"))+int(time.strftime("%d%m%Y"))
@@ -370,31 +382,27 @@ class billClass:
         self.txt_bill_area.insert(END,bill_bottom_temp)
 
     def bill_middle(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
         try:
-            for row in self.cart_list:
-                pid=row[0]
-                name=row[1]
-                qty=int(row[4])-int(row[3])
-                if int(row[3])==int(row[4]):
-                    status="Inactive"
-                if int(row[3])!=int(row[4]):
-                    status="Active"
-                price=float(row[2])*int(row[3])
-                price=str(price)
-                self.txt_bill_area.insert(END,"\n "+name+"\t\t\t"+row[3]+"\tRs."+price)
-                #------------- update qty in product table --------------
-                cur.execute("update product set qty=?,status=? where pid=?",(
-                    qty,
-                    status,
-                    pid
-                ))
-                con.commit()
-            con.close()
+            with sqlite3.connect(DB_PATH) as con:
+                cur = con.cursor()
+                for row in self.cart_list:
+                    pid = row[0]
+                    name = row[1]
+                    qty = int(row[4]) - int(row[3])
+                    
+                    status = "Active"
+                    if int(row[3]) == int(row[4]):
+                        status = "Inactive"
+                        
+                    price = float(row[2]) * int(row[3])
+                    price = str(price)
+                    self.txt_bill_area.insert(END, "\n " + name + "\t\t\t" + str(row[3]) + "\tRs." + price)
+                    
+                    cur.execute("update product set qty=?,status=? where pid=?", (qty, status, pid))
+                    
             self.show()
         except Exception as ex:
-            messagebox.showerror("Error",f"Error due to : {str(ex)}",parent=self.root)
+            messagebox.showerror("Error", f"Error due to : {str(ex)}", parent=self.root)
 
     def clear_cart(self):
         self.var_pid.set("")
@@ -433,5 +441,5 @@ class billClass:
 
 if __name__=="__main__":
     root=Tk()
-    obj=billClass(root)
+    obj=billManager(root)
     root.mainloop()

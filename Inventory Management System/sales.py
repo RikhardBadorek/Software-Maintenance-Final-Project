@@ -20,7 +20,7 @@ class salesManager:
         self.root.resizable(False, False)
         self.root.focus_force()
 
-        self.blll_list = []
+        self.bill_list = []
         self.var_invoice = StringVar()
 
         # --------------- title ---------------------
@@ -118,20 +118,26 @@ class salesManager:
     def search(self):
         if self.var_invoice.get() == "":
             messagebox.showerror("Error", "Invoice no. should be required", parent=self.root)
-        else:
-            if self.var_invoice.get() in self.blll_list:
-                file_path = os.path.join(BILL_DIR, f"{self.var_invoice.get()}.txt")
-                self.bill_area.delete('1.0', END)
+            return
+            
+        if self.var_invoice.get() not in self.bill_list:
+            messagebox.showerror("Error", "Invalid Invoice No.", parent=self.root)
+            return
 
-                with open(file_path, 'r') as fp:
-                    for i in fp:
-                        self.bill_area.insert(END, i)
-            else:
-                messagebox.showerror("Error", "Invalid Invoice No.", parent=self.root)
+        file_path = os.path.join(BILL_DIR, f"{self.var_invoice.get()}.txt")
+        self.bill_area.delete('1.0', END)
+
+        try:
+            with open(file_path, 'r') as fp:
+                for line in fp:
+                    self.bill_area.insert(END, line)
+        except Exception as ex:
+            messagebox.showerror("Error", f"Could not read the file: {str(ex)}", parent=self.root)
 
     def clear(self):
         self.show()
         self.bill_area.delete('1.0', END)
+        self.var_invoice.set("")
 
 
 if __name__ == "__main__":
