@@ -12,6 +12,7 @@ from product import productManager
 from sales import salesManager
 
 # ------------------ BASE PATH SETUP ------------------
+DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ims.db')
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 IMAGE_DIR = os.path.join(BASE_DIR, "images")
 BILL_DIR = os.path.join(BASE_DIR, "bill")
@@ -192,40 +193,38 @@ class IMS:
         self.new_obj = salesManager(self.new_win)
 
     def update_content(self):
-        con = sqlite3.connect(database=os.path.join(BASE_DIR, 'ims.db'))
-        cur = con.cursor()
-
         try:
-            cur.execute("select * from product")
-            product = cur.fetchall()
-            self.lbl_product.config(text=f"Total Product\n[ {len(product)} ]")
+            with sqlite3.connect(DB_PATH) as con:
+                cur = con.cursor()
 
-            cur.execute("select * from category")
-            category = cur.fetchall()
-            self.lbl_category.config(text=f"Total Category\n[ {len(category)} ]")
+                cur.execute("select count(*) from product")
+                product_count = cur.fetchone()[0]
+                self.lbl_product.config(text=f"Total Product\n[ {product_count} ]")
 
-            cur.execute("select * from employee")
-            employee = cur.fetchall()
-            self.lbl_employee.config(text=f"Total Employee\n[ {len(employee)} ]")
+                cur.execute("select count(*) from category")
+                category_count = cur.fetchone()[0]
+                self.lbl_category.config(text=f"Total Category\n[ {category_count} ]")
 
-            cur.execute("select * from supplier")
-            supplier = cur.fetchall()
-            self.lbl_supplier.config(text=f"Total Supplier\n[ {len(supplier)} ]")
+                cur.execute("select count(*) from employee")
+                employee_count = cur.fetchone()[0]
+                self.lbl_employee.config(text=f"Total Employee\n[ {employee_count} ]")
 
-            bill = len(os.listdir(BILL_DIR))
-            self.lbl_sales.config(text=f"Total Sales\n[ {bill} ]")
+                cur.execute("select count(*) from supplier")
+                supplier_count = cur.fetchone()[0]
+                self.lbl_supplier.config(text=f"Total Supplier\n[ {supplier_count} ]")
 
-            time_ = time.strftime("%I:%M:%S")
-            date_ = time.strftime("%d-%m-%Y")
-            self.lbl_clock.config(
-                text=f"Welcome to Inventory Management System\t\t Date: {date_}\t\t Time: {time_}"
-            )
+                bill = len(os.listdir(BILL_DIR))
+                self.lbl_sales.config(text=f"Total Sales\n[ {bill} ]")
 
-            self.lbl_clock.after(200, self.update_content)
+                time_ = time.strftime("%I:%M:%S")
+                date_ = time.strftime("%d-%m-%Y")
+                self.lbl_clock.config(
+                    text=f"Welcome to Inventory Management System\t\t Date: {date_}\t\t Time: {time_}"
+                )
 
         except Exception as ex:
             messagebox.showerror("Error", f"Error due to : {str(ex)}", parent=self.root)
-
+        self.lbl_clock.after(200, self.update_content)
 
 if __name__ == "__main__":
     root = Tk()
